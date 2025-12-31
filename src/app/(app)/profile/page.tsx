@@ -58,11 +58,11 @@ export default function ProfilePage() {
       : null;
 
   return (
-    <div className="px-4 py-6">
+    <div className="px-4 py-6 md:px-8">
       {/* Profile Header */}
-      <div className="mb-6 flex items-start gap-4">
+      <div className="mb-6 flex items-start gap-4 md:gap-6">
         <div
-          className="h-20 w-20 rounded-full bg-cover bg-center"
+          className="h-20 w-20 rounded-full bg-cover bg-center md:h-28 md:w-28"
           style={{
             backgroundImage: currentUser.image
               ? `url(${currentUser.image})`
@@ -70,7 +70,7 @@ export default function ProfilePage() {
           }}
         />
         <div className="flex-1">
-          <h1 className="font-heading text-xl font-bold text-white">
+          <h1 className="font-heading text-xl font-bold text-white md:text-2xl">
             {profile?.displayName || currentUser.name}
           </h1>
           <p className="text-sm text-white/50">
@@ -139,7 +139,7 @@ export default function ProfilePage() {
       {profile && (
         <section className="mb-6">
           <h2 className="mb-3 font-heading text-lg font-semibold text-white">Preferences</h2>
-          <div className="glass space-y-3 rounded-xl p-4">
+          <div className="glass grid gap-3 rounded-xl p-4 md:grid-cols-2 md:gap-4">
             <PreferenceRow
               label="Sleep Schedule"
               value={SLEEP_LABELS[profile.sleepSchedule]}

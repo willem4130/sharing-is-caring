@@ -14,6 +14,7 @@ export default function ChatThreadPage({
   const { currentUser } = useUser();
   const [message, setMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const hasMarkedRead = useRef(false);
 
   const utils = api.useUtils();
 
@@ -29,6 +30,21 @@ export default function ChatThreadPage({
       utils.messages.getConversation.invalidate({ threadId });
     },
   });
+
+  const markReadMutation = api.messages.markRead.useMutation({
+    onSuccess: () => {
+      utils.messages.getConversations.invalidate();
+      utils.messages.getUnreadCount.invalidate();
+    },
+  });
+
+  // Mark messages as read when viewing the conversation
+  useEffect(() => {
+    if (data && threadId && !hasMarkedRead.current) {
+      hasMarkedRead.current = true;
+      markReadMutation.mutate({ threadId });
+    }
+  }, [threadId, data, markReadMutation]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -81,9 +97,9 @@ export default function ChatThreadPage({
     otherUser.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${otherUser.id}`;
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col">
+    <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-3xl flex-col md:h-[calc(100vh-6rem)]">
       {/* Header */}
-      <div className="flex items-center gap-4 border-b border-white/10 px-4 py-3">
+      <div className="flex items-center gap-4 border-b border-white/10 px-4 py-3 md:px-6">
         <Link
           href="/messages"
           className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
@@ -102,7 +118,7 @@ export default function ChatThreadPage({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className="flex-1 overflow-y-auto px-4 py-4 md:px-6">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
             <div className="text-5xl">👋</div>
@@ -153,7 +169,7 @@ export default function ChatThreadPage({
       </div>
 
       {/* Input */}
-      <div className="border-t border-white/10 p-4">
+      <div className="border-t border-white/10 p-4 md:px-6">
         <div className="flex gap-3">
           <input
             type="text"

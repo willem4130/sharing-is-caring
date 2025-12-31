@@ -148,7 +148,7 @@ export default function MatchesPage() {
 
       {/* Matches Grid */}
       {!attendeesLoading && selectedEventId && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredAttendees.map((attendance) => (
             <MatchCard key={attendance.id} attendance={attendance} eventId={selectedEventId} />
           ))}

@@ -1,88 +1,42 @@
 'use client';
 
 import Link from 'next/link';
-
-const CONVERSATIONS = [
-  {
-    id: '1',
-    name: 'Nina Petrov',
-    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=nina',
-    lastMessage: 'Hey! Are you still looking for a roommate for Tomorrowland?',
-    time: '2m ago',
-    unread: true,
-    event: 'Tomorrowland',
-  },
-  {
-    id: '2',
-    name: 'James Chen',
-    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=james',
-    lastMessage: 'That sounds great! Let me know when you want to discuss details.',
-    time: '1h ago',
-    unread: true,
-    event: 'Web Summit',
-  },
-  {
-    id: '3',
-    name: 'Tom Brown',
-    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=tom',
-    lastMessage: 'The camper van has space for 2 more people if you are interested',
-    time: '3h ago',
-    unread: false,
-    event: 'Glastonbury',
-  },
-  {
-    id: '4',
-    name: 'Max Müller',
-    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=max',
-    lastMessage: 'See you at Gamescom then! 🎮',
-    time: '1d ago',
-    unread: false,
-    event: 'Gamescom',
-  },
-  {
-    id: '5',
-    name: 'Lisa Andersson',
-    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisa',
-    lastMessage: 'Thanks for the info about the festival!',
-    time: '2d ago',
-    unread: false,
-    event: 'Tomorrowland',
-  },
-];
+import { api } from '@/trpc/react';
 
 export default function MessagesPage() {
-  const unreadCount = CONVERSATIONS.filter((c) => c.unread).length;
+  const { data: conversations, isLoading } = api.messages.getConversations.useQuery();
+
+  const unreadCount = conversations?.filter((c) => c.unreadCount > 0).length ?? 0;
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-instagram-pink" />
+        <p className="mt-4 text-white/50">Loading messages...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="px-4 py-6">
+    <div className="px-4 py-6 md:px-8">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-2xl font-bold text-white">Messages</h1>
+          <h1 className="font-heading text-2xl font-bold text-white md:text-3xl">Messages</h1>
           {unreadCount > 0 && (
-            <p className="text-sm text-white/50">{unreadCount} unread messages</p>
+            <p className="text-sm text-white/50">{unreadCount} unread conversation{unreadCount !== 1 ? 's' : ''}</p>
           )}
         </div>
-        <button className="rounded-full bg-white/10 p-2 transition-colors hover:bg-white/20">
-          <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-        </button>
       </div>
 
       {/* Conversations */}
-      <div className="space-y-2">
-        {CONVERSATIONS.map((conversation) => (
-          <ConversationItem key={conversation.id} conversation={conversation} />
-        ))}
-      </div>
-
-      {CONVERSATIONS.length === 0 && (
+      {conversations && conversations.length > 0 ? (
+        <div className="space-y-2">
+          {conversations.map((thread) => (
+            <ConversationItem key={thread.id} thread={thread} />
+          ))}
+        </div>
+      ) : (
         <div className="py-16 text-center">
           <div className="mb-4 text-5xl">💬</div>
           <h3 className="mb-2 font-semibold text-white">No messages yet</h3>
@@ -91,7 +45,7 @@ export default function MessagesPage() {
           </p>
           <Link
             href="/matches"
-            className="mt-4 inline-block rounded-full gradient-primary px-6 py-2 text-sm font-medium text-white"
+            className="gradient-primary mt-4 inline-block rounded-full px-6 py-2 text-sm font-medium text-white"
           >
             Find Matches
           </Link>
@@ -101,34 +55,66 @@ export default function MessagesPage() {
   );
 }
 
-function ConversationItem({ conversation }: { conversation: (typeof CONVERSATIONS)[0] }) {
+type ConversationThread = {
+  id: string;
+  otherUser: { id: string; name: string | null; image: string | null };
+  unreadCount: number;
+  lastMessage: { content: string; createdAt: Date } | null;
+  match?: { event?: { name: string } | null } | null;
+};
+
+function ConversationItem({ thread }: { thread: ConversationThread }) {
+  const otherUser = thread.otherUser;
+  const avatarUrl = otherUser.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${otherUser.id}`;
+  const hasUnread = thread.unreadCount > 0;
+  const eventName = thread.match?.event?.name;
+
   return (
     <Link
-      href={`/messages/${conversation.id}`}
+      href={`/messages/${thread.id}`}
       className="glass glass-hover flex items-center gap-4 rounded-xl p-4"
     >
       <div className="relative">
-        <img
-          src={conversation.image}
-          alt={conversation.name}
-          className="h-14 w-14 rounded-full"
+        <div
+          className="h-14 w-14 rounded-full bg-cover bg-center"
+          style={{ backgroundImage: `url(${avatarUrl})` }}
         />
-        {conversation.unread && (
+        {hasUnread && (
           <div className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-black bg-instagram-pink" />
         )}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <h3 className={`truncate font-medium ${conversation.unread ? 'text-white' : 'text-white/80'}`}>
-            {conversation.name}
+          <h3 className={`truncate font-medium ${hasUnread ? 'text-white' : 'text-white/80'}`}>
+            {otherUser.name || 'Anonymous'}
           </h3>
-          <span className="flex-shrink-0 text-xs text-white/40">{conversation.time}</span>
+          <span className="flex-shrink-0 text-xs text-white/40">
+            {thread.lastMessage ? formatTime(new Date(thread.lastMessage.createdAt)) : ''}
+          </span>
         </div>
-        <p className="text-xs text-instagram-pink">{conversation.event}</p>
-        <p className={`mt-1 truncate text-sm ${conversation.unread ? 'text-white/70' : 'text-white/50'}`}>
-          {conversation.lastMessage}
+        {eventName && <p className="text-xs text-instagram-pink">{eventName}</p>}
+        <p className={`mt-1 truncate text-sm ${hasUnread ? 'text-white/70' : 'text-white/50'}`}>
+          {thread.lastMessage?.content || 'No messages yet'}
         </p>
       </div>
     </Link>
   );
+}
+
+function formatTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
 }
