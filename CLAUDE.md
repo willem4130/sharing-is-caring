@@ -171,6 +171,22 @@ npm run db:seed      # Seed database
 | Validation | Zod |
 | State | TanStack React Query |
 
+## Responsive Design
+
+**Desktop-first optimization** - UI should be comfortable on both mobile and desktop:
+
+- Use `max-w-4xl mx-auto` for main content containers (centered, max 896px)
+- Cards should use `grid` with responsive columns: `grid-cols-1 md:grid-cols-2 lg:grid-cols-3`
+- Fixed bottom nav should transform to sidebar on `lg:` breakpoint (future)
+- Modals: centered on desktop, bottom-sheet on mobile
+- Generous padding on desktop: `px-4 md:px-8 lg:px-12`
+
+**Breakpoints:**
+- `sm:` 640px - Small tablets
+- `md:` 768px - Tablets/small laptops
+- `lg:` 1024px - Desktops
+- `xl:` 1280px - Large desktops
+
 ## Matching Algorithm
 
 Located in `/src/lib/matching/`. Scores users 0-100:
@@ -187,6 +203,20 @@ Located in `/src/lib/matching/`. Scores users 0-100:
 | Languages | 5 |
 | Verification | 3 |
 | Gender preference | 2 |
+
+## Testing & Mock Data
+
+**Development mode uses mock data** - real auth not needed yet:
+
+- Mock user switcher in header for testing different users
+- tRPC supports mock user via `x-mock-user-id` header
+- Seed database has test events, users, and attendances
+- Demo compatibility scores shown (real matching works with auth)
+
+**Adding test data:**
+- Run `npm run db:seed` to reset and populate test data
+- Modify `prisma/seed.ts` to add more events/users
+- No need for real event data - made-up events are perfect for testing
 
 ## Deployment
 
@@ -207,26 +237,31 @@ Use `/commit` command for quality-checked commits with auto-push.
 
 ## Build Plan (Current Sprint)
 
-### Phase 1: Database ⏳
-- [ ] Set up Neon PostgreSQL
-- [ ] Push schema & seed test data
+### Phase 1: Database ✅
+- [x] Set up Neon PostgreSQL
+- [x] Push schema & seed test data
 
-### Phase 2: App Shell ⏳
-- [ ] App layout with bottom nav
-- [ ] Mock user switcher for testing
+### Phase 2: App Shell ✅
+- [x] App layout with bottom nav
+- [x] Mock user switcher for testing
 
-### Phase 3: Events ⏳
-- [ ] Events list & detail pages
-- [ ] Event cards, attend modal
+### Phase 3: Events ✅
+- [x] Events list & detail pages
+- [x] Event cards, attend modal
 
 ### Phase 4: Matching ⏳
-- [ ] Match discovery page
-- [ ] Match cards, profile preview
-- [ ] Request flow
+- [x] Match discovery page
+- [x] Match cards, profile preview
+- [ ] Request flow (send/accept/reject)
 
 ### Phase 5: Messaging ⏳
-- [ ] Inbox & chat threads
+- [x] Inbox list page
+- [ ] Chat thread page
 
-### Phase 6: Profile ⏳
-- [ ] View/edit profile
-- [ ] Admin user management
+### Phase 6: Profile ✅
+- [x] View/edit profile
+- [x] Mock user management
+
+### Phase 7: Responsive ⏳
+- [ ] Desktop-optimized layouts
+- [ ] Wider content containers

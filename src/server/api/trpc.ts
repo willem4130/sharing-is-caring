@@ -5,7 +5,22 @@ import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {
-  const session = await auth();
+  // Check for mock user ID header (development mode without auth)
+  const mockUserId = opts.headers.get('x-mock-user-id');
+
+  let session = await auth();
+
+  // If no real session but we have a mock user ID, create a mock session
+  if (!session && mockUserId) {
+    session = {
+      user: {
+        id: mockUserId,
+        name: 'Mock User',
+        email: `${mockUserId}@mock.com`,
+      },
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    };
+  }
 
   return {
     db,

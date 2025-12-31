@@ -43,6 +43,13 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
           headers: () => {
             const headers = new Headers();
             headers.set('x-trpc-source', 'nextjs-react');
+            // Send mock user ID for development (no auth)
+            if (typeof window !== 'undefined') {
+              const mockUserId = localStorage.getItem('mockUserId');
+              if (mockUserId) {
+                headers.set('x-mock-user-id', mockUserId);
+              }
+            }
             return headers;
           },
         }),

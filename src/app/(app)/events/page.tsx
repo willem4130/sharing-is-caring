@@ -65,9 +65,9 @@ export default function EventsPage() {
   const featuredEvents = events.filter((e) => e.isFeatured).slice(0, 3);
 
   return (
-    <div className="px-4 py-6">
+    <div className="px-4 py-6 md:px-8">
       {/* Header */}
-      <h1 className="font-heading mb-6 text-2xl font-bold text-white">Discover Events</h1>
+      <h1 className="font-heading mb-6 text-2xl font-bold text-white md:text-3xl">Discover Events</h1>
 
       {/* Search */}
       <div className="relative mb-4">
@@ -136,7 +136,7 @@ export default function EventsPage() {
                 ? 'All Events'
                 : FILTERS.find((f) => f.value === activeFilter)?.label ?? 'Events'}
             </h2>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {events.map((event) => (
                 <EventCard key={event.id} event={event} />
               ))}

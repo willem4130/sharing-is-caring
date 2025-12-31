@@ -41,17 +41,17 @@ export default function HomePage() {
   }
 
   return (
-    <div className="px-4 py-6">
+    <div className="px-4 py-6 md:px-8">
       {/* Welcome Section */}
       <section className="mb-8">
-        <h1 className="font-heading text-2xl font-bold text-white">
+        <h1 className="font-heading text-2xl font-bold text-white md:text-3xl">
           Hey, {currentUser?.name?.split(' ')[0] || 'there'}! 👋
         </h1>
         <p className="mt-1 text-white/50">Find your perfect event roommate</p>
       </section>
 
       {/* Quick Actions */}
-      <section className="mb-8 grid grid-cols-2 gap-3">
+      <section className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Link
           href="/events"
           className="glass glass-hover flex flex-col items-center gap-2 rounded-2xl p-4 text-center"
@@ -70,6 +70,24 @@ export default function HomePage() {
           </div>
           <span className="text-sm font-medium text-white">Find Matches</span>
         </Link>
+        <Link
+          href="/messages"
+          className="glass glass-hover flex flex-col items-center gap-2 rounded-2xl p-4 text-center"
+        >
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-instagram-soft text-2xl">
+            💬
+          </div>
+          <span className="text-sm font-medium text-white">Messages</span>
+        </Link>
+        <Link
+          href="/profile"
+          className="glass glass-hover flex flex-col items-center gap-2 rounded-2xl p-4 text-center"
+        >
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-instagram-soft text-2xl">
+            👤
+          </div>
+          <span className="text-sm font-medium text-white">My Profile</span>
+        </Link>
       </section>
 
       {/* Upcoming Events */}
@@ -81,7 +99,7 @@ export default function HomePage() {
           </Link>
         </div>
 
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {events.map((event) => (
             <EventCard
               key={event.id}
@@ -94,7 +112,7 @@ export default function HomePage() {
             />
           ))}
           {events.length === 0 && (
-            <div className="glass rounded-2xl p-6 text-center">
+            <div className="glass rounded-2xl p-6 text-center md:col-span-2">
               <p className="text-white/50">No upcoming events</p>
               <Link href="/events" className="mt-2 inline-block text-sm text-instagram-pink">
                 Browse all events

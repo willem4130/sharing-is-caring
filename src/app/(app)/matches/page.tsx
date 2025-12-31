@@ -1,23 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { api } from '@/trpc/react';
+import { useUser } from '@/lib/mock/user-context';
 import { MATCHING_WEIGHTS } from '@/lib/matching/weights';
 
 type AccommodationStatus = 'LOOKING' | 'HAVE_ROOM' | 'NOT_NEEDED';
 
-// Generate demo compatibility scores
-function generateDemoScore(): { total: number; breakdown: Record<string, number> } {
+// Generate stable demo compatibility scores based on user ID
+function generateDemoScore(seed: string): { total: number; breakdown: Record<string, number> } {
+  // Simple hash function for consistent scores per user
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0;
+  }
+  const rand = (offset: number) => Math.abs((hash + offset * 1000) % 100) / 100;
+
   const breakdown = {
-    sleepSchedule: Math.round(Math.random() * MATCHING_WEIGHTS.sleepSchedule),
-    cleanlinessLevel: Math.round(Math.random() * MATCHING_WEIGHTS.cleanlinessLevel),
-    smokingTolerance: Math.round(Math.random() * MATCHING_WEIGHTS.smokingTolerance),
-    drinkingTolerance: Math.round(Math.random() * MATCHING_WEIGHTS.drinkingTolerance),
-    socialLevel: Math.round(Math.random() * MATCHING_WEIGHTS.socialLevel),
-    budgetCompatibility: Math.round(Math.random() * MATCHING_WEIGHTS.budgetCompatibility),
-    interests: Math.round(Math.random() * MATCHING_WEIGHTS.interests),
-    languages: Math.round(Math.random() * MATCHING_WEIGHTS.languages),
+    sleepSchedule: Math.round(rand(1) * MATCHING_WEIGHTS.sleepSchedule),
+    cleanlinessLevel: Math.round(rand(2) * MATCHING_WEIGHTS.cleanlinessLevel),
+    smokingTolerance: Math.round(rand(3) * MATCHING_WEIGHTS.smokingTolerance),
+    drinkingTolerance: Math.round(rand(4) * MATCHING_WEIGHTS.drinkingTolerance),
+    socialLevel: Math.round(rand(5) * MATCHING_WEIGHTS.socialLevel),
+    budgetCompatibility: Math.round(rand(6) * MATCHING_WEIGHTS.budgetCompatibility),
+    interests: Math.round(rand(7) * MATCHING_WEIGHTS.interests),
+    languages: Math.round(rand(8) * MATCHING_WEIGHTS.languages),
   };
   const total = Object.values(breakdown).reduce((a, b) => a + b, 0);
   return { total, breakdown };
@@ -26,6 +34,7 @@ function generateDemoScore(): { total: number; breakdown: Record<string, number>
 export default function MatchesPage() {
   const [filter, setFilter] = useState<'all' | 'HAVE_ROOM' | 'LOOKING'>('all');
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const { currentUser } = useUser();
 
   // Fetch events
   const { data: eventsData, isLoading: eventsLoading } = api.events.list.useQuery({
@@ -48,15 +57,18 @@ export default function MatchesPage() {
   const events = eventsData?.events ?? [];
   const attendees = attendeesData?.attendees ?? [];
 
+  // Filter out current user from attendees
+  const filteredAttendees = attendees.filter((a) => a.user.id !== currentUser?.id);
+
   // Auto-select first event if none selected
   if (events.length > 0 && !selectedEventId) {
     setSelectedEventId(events[0]?.id ?? null);
   }
 
   return (
-    <div className="px-4 py-6">
+    <div className="px-4 py-6 md:px-8">
       {/* Header */}
-      <h1 className="font-heading mb-2 text-2xl font-bold text-white">Find Matches</h1>
+      <h1 className="font-heading mb-2 text-2xl font-bold text-white md:text-3xl">Find Matches</h1>
       <p className="mb-6 text-white/50">People looking for roommates at your events</p>
 
       {/* Event Selector */}
@@ -136,14 +148,14 @@ export default function MatchesPage() {
 
       {/* Matches Grid */}
       {!attendeesLoading && selectedEventId && (
-        <div className="space-y-4">
-          {attendees.map((attendance) => (
-            <MatchCard key={attendance.id} attendance={attendance} />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {filteredAttendees.map((attendance) => (
+            <MatchCard key={attendance.id} attendance={attendance} eventId={selectedEventId} />
           ))}
         </div>
       )}
 
-      {!attendeesLoading && selectedEventId && attendees.length === 0 && (
+      {!attendeesLoading && selectedEventId && filteredAttendees.length === 0 && (
         <div className="py-12 text-center">
           <div className="text-5xl">🔍</div>
           <p className="mt-4 text-white/50">No people found for this event</p>
@@ -179,9 +191,24 @@ type AttendanceData = {
   };
 };
 
-function MatchCard({ attendance }: { attendance: AttendanceData }) {
+function MatchCard({ attendance, eventId }: { attendance: AttendanceData; eventId: string }) {
   const [expanded, setExpanded] = useState(false);
-  const [score] = useState(() => generateDemoScore());
+  const [requestSent, setRequestSent] = useState(false);
+
+  const score = useMemo(() => generateDemoScore(attendance.user.id), [attendance.user.id]);
+
+  const sendRequestMutation = api.matches.sendRequest.useMutation({
+    onSuccess: () => {
+      setRequestSent(true);
+    },
+  });
+
+  const handleSendRequest = () => {
+    sendRequestMutation.mutate({
+      receiverId: attendance.user.id,
+      eventId,
+    });
+  };
 
   const user = attendance.user;
   const profile = user.profile;
@@ -202,9 +229,9 @@ function MatchCard({ attendance }: { attendance: AttendanceData }) {
             {score.total}%
           </div>
         </div>
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-white">{displayName}</h3>
+            <h3 className="truncate font-semibold text-white">{displayName}</h3>
             {profile?.age && <span className="text-sm text-white/40">{profile.age}</span>}
           </div>
           {profile?.bio && (
@@ -283,10 +310,30 @@ function MatchCard({ attendance }: { attendance: AttendanceData }) {
             >
               View Profile
             </Link>
-            <button className="gradient-primary flex-1 rounded-xl py-3 text-sm font-medium text-white transition-opacity hover:opacity-90">
-              Send Request
-            </button>
+            {requestSent ? (
+              <div className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-green-500/20 py-3 text-sm font-medium text-green-400">
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Request Sent
+              </div>
+            ) : (
+              <button
+                onClick={handleSendRequest}
+                disabled={sendRequestMutation.isPending}
+                className="gradient-primary flex-1 rounded-xl py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {sendRequestMutation.isPending ? 'Sending...' : 'Send Request'}
+              </button>
+            )}
           </div>
+
+          {/* Error message */}
+          {sendRequestMutation.error && (
+            <p className="mt-2 text-center text-sm text-red-400">
+              {sendRequestMutation.error.message}
+            </p>
+          )}
         </div>
       )}
     </div>

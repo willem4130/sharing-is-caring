@@ -1,6 +1,6 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/trpc/react';
 import { useUser } from '@/lib/mock/user-context';
@@ -48,8 +48,40 @@ export default function EventDetailPage({
 }) {
   const { slug } = use(params);
   const { currentUser } = useUser();
+  const [showAttendModal, setShowAttendModal] = useState(false);
+  const [accommodationStatus, setAccommodationStatus] = useState<'LOOKING' | 'HAVE_ROOM' | 'NOT_NEEDED'>('LOOKING');
 
+  const utils = api.useUtils();
   const { data: event, isLoading, error } = api.events.getBySlug.useQuery({ slug });
+
+  // Check if current user is attending
+  const isAttending = event?.attendances.some((a) => a.user.id === currentUser?.id) ?? false;
+
+  const attendMutation = api.events.attend.useMutation({
+    onSuccess: () => {
+      utils.events.getBySlug.invalidate({ slug });
+      setShowAttendModal(false);
+    },
+  });
+
+  const unattendMutation = api.events.unattend.useMutation({
+    onSuccess: () => {
+      utils.events.getBySlug.invalidate({ slug });
+    },
+  });
+
+  const handleAttend = () => {
+    if (!event) return;
+    attendMutation.mutate({
+      eventId: event.id,
+      accommodationStatus,
+    });
+  };
+
+  const handleUnattend = () => {
+    if (!event) return;
+    unattendMutation.mutate({ eventId: event.id });
+  };
 
   if (isLoading) {
     return (
@@ -271,15 +303,91 @@ export default function EventDetailPage({
 
       {/* Fixed Bottom CTA */}
       <div className="fixed bottom-20 left-0 right-0 bg-gradient-to-t from-black via-black/90 to-transparent p-4 pt-8">
-        <button className="gradient-primary w-full rounded-full py-4 font-semibold text-white">
-          I&apos;m Going - Find Roommates
-        </button>
+        {isAttending ? (
+          <div className="flex gap-3">
+            <Link
+              href={`/matches?eventId=${event.id}`}
+              className="gradient-primary flex-1 rounded-full py-4 text-center font-semibold text-white"
+            >
+              Find Roommates
+            </Link>
+            <button
+              onClick={handleUnattend}
+              disabled={unattendMutation.isPending}
+              className="rounded-full border border-white/20 bg-white/5 px-6 py-4 font-medium text-white/70 transition-colors hover:bg-white/10"
+            >
+              {unattendMutation.isPending ? '...' : 'Leave'}
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowAttendModal(true)}
+            className="gradient-primary w-full rounded-full py-4 font-semibold text-white"
+          >
+            I&apos;m Going - Find Roommates
+          </button>
+        )}
         {currentUser && (
           <p className="mt-2 text-center text-xs text-white/40">
             Signed in as {currentUser.name}
           </p>
         )}
       </div>
+
+      {/* Attend Modal */}
+      {showAttendModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4">
+          <div className="glass w-full max-w-md rounded-t-3xl p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-heading text-xl font-bold text-white">Join Event</h3>
+              <button
+                onClick={() => setShowAttendModal(false)}
+                className="rounded-full p-2 text-white/50 hover:bg-white/10"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <p className="mb-4 text-white/60">What&apos;s your accommodation situation?</p>
+
+            <div className="mb-6 space-y-3">
+              {[
+                { value: 'LOOKING' as const, label: 'Looking for a room', emoji: '🔍' },
+                { value: 'HAVE_ROOM' as const, label: 'I have space to share', emoji: '🏠' },
+                { value: 'NOT_NEEDED' as const, label: 'Just here to connect', emoji: '👋' },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setAccommodationStatus(option.value)}
+                  className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-all ${
+                    accommodationStatus === option.value
+                      ? 'border-instagram-pink bg-instagram-pink/10'
+                      : 'border-white/10 bg-white/5 hover:bg-white/10'
+                  }`}
+                >
+                  <span className="text-2xl">{option.emoji}</span>
+                  <span className="font-medium text-white">{option.label}</span>
+                  {accommodationStatus === option.value && (
+                    <svg className="ml-auto h-5 w-5 text-instagram-pink" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={handleAttend}
+              disabled={attendMutation.isPending}
+              className="gradient-primary w-full rounded-full py-4 font-semibold text-white disabled:opacity-50"
+            >
+              {attendMutation.isPending ? 'Joining...' : 'Confirm'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
