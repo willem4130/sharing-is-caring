@@ -23,8 +23,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarNav />
 
         {/* Main content - shifts right on desktop to account for sidebar */}
-        <main className="mx-auto max-w-5xl px-0 md:px-4 lg:ml-64 lg:mr-0 lg:max-w-none lg:px-8">
-          <div className="lg:max-w-4xl">{children}</div>
+        <main className="mx-auto max-w-5xl px-0 md:px-4 lg:ml-64 lg:mr-0 lg:max-w-none lg:px-8 xl:px-12">
+          <div className="lg:max-w-5xl xl:max-w-6xl">{children}</div>
         </main>
 
         {/* Bottom navigation (mobile/tablet only) */}
