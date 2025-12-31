@@ -188,6 +188,17 @@ Located in `/src/lib/matching/`. Scores users 0-100:
 | Verification | 3 |
 | Gender preference | 2 |
 
+## Deployment
+
+- **Production URL**: https://sharing-is-caring-chi.vercel.app
+- **Vercel Project**: willem4130s-projects/sharing-is-caring
+- **Auto-deploy**: Enabled (pushes to main trigger deployment)
+
+Deploy manually:
+```bash
+npx vercel --prod
+```
+
 ## Git Workflow
 
 **CRITICAL: This is a SEPARATE repository. NEVER commit to any nextjs-* or template repos!**
