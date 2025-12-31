@@ -100,6 +100,40 @@ export const eventsRouter = createTRPCRouter({
       return event;
     }),
 
+  getBySlug: publicProcedure
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const event = await ctx.db.event.findUnique({
+        where: { slug: input.slug },
+        include: {
+          attendances: {
+            take: 10,
+            include: {
+              user: {
+                select: { id: true, name: true, image: true },
+              },
+            },
+          },
+          accommodations: {
+            where: { isActive: true, availableSpots: { gt: 0 } },
+            take: 5,
+            include: {
+              owner: {
+                select: { id: true, name: true, image: true },
+              },
+            },
+          },
+          _count: { select: { attendances: true, accommodations: true } },
+        },
+      });
+
+      if (!event) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Event not found' });
+      }
+
+      return event;
+    }),
+
   attend: protectedProcedure
     .input(
       z.object({

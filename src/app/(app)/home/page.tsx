@@ -2,9 +2,35 @@
 
 import Link from 'next/link';
 import { useUser } from '@/lib/mock/user-context';
+import { api } from '@/trpc/react';
+
+function formatDateRange(startDate: Date, endDate: Date): string {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const startMonth = start.toLocaleDateString('en-US', { month: 'short' });
+  const endMonth = end.toLocaleDateString('en-US', { month: 'short' });
+  const startDay = start.getDate();
+  const endDay = end.getDate();
+  const year = end.getFullYear();
+
+  if (startMonth === endMonth) {
+    return `${startMonth} ${startDay}-${endDay}, ${year}`;
+  }
+  return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+}
 
 export default function HomePage() {
-  const { currentUser, isLoading } = useUser();
+  const { currentUser, isLoading: userLoading } = useUser();
+
+  // Fetch featured events
+  const { data: eventsData, isLoading: eventsLoading } = api.events.list.useQuery({
+    page: 1,
+    limit: 4,
+    upcoming: true,
+  });
+
+  const isLoading = userLoading || eventsLoading;
+  const events = eventsData?.events.slice(0, 2) ?? [];
 
   if (isLoading) {
     return (
@@ -46,36 +72,39 @@ export default function HomePage() {
         </Link>
       </section>
 
-      {/* Your Events */}
+      {/* Upcoming Events */}
       <section className="mb-8">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-heading text-lg font-semibold text-white">Your Events</h2>
+          <h2 className="font-heading text-lg font-semibold text-white">Upcoming Events</h2>
           <Link href="/events" className="text-sm text-instagram-pink">
             See all
           </Link>
         </div>
 
         <div className="space-y-3">
-          <EventCard
-            name="Tomorrowland"
-            date="Jul 18-27, 2025"
-            location="Boom, Belgium"
-            image="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=400"
-            status="looking"
-            matches={3}
-          />
-          <EventCard
-            name="Glastonbury"
-            date="Jun 25-29, 2025"
-            location="Pilton, UK"
-            image="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=400"
-            status="looking"
-            matches={5}
-          />
+          {events.map((event) => (
+            <EventCard
+              key={event.id}
+              slug={event.slug}
+              name={event.name}
+              date={formatDateRange(event.startDate, event.endDate)}
+              location={`${event.city}, ${event.country}`}
+              imageUrl={event.imageUrl}
+              attendees={event._count.attendances}
+            />
+          ))}
+          {events.length === 0 && (
+            <div className="glass rounded-2xl p-6 text-center">
+              <p className="text-white/50">No upcoming events</p>
+              <Link href="/events" className="mt-2 inline-block text-sm text-instagram-pink">
+                Browse all events
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Potential Matches */}
+      {/* Demo Matches */}
       <section className="mb-8">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-heading text-lg font-semibold text-white">Top Matches</h2>
@@ -116,21 +145,9 @@ export default function HomePage() {
       <section>
         <h2 className="mb-4 font-heading text-lg font-semibold text-white">Recent Activity</h2>
         <div className="space-y-3">
-          <ActivityItem
-            type="match"
-            message="Nina sent you a match request"
-            time="2h ago"
-          />
-          <ActivityItem
-            type="message"
-            message="New message from James"
-            time="5h ago"
-          />
-          <ActivityItem
-            type="event"
-            message="Tomorrowland tickets are selling fast!"
-            time="1d ago"
-          />
+          <ActivityItem type="match" message="Nina sent you a match request" time="2h ago" />
+          <ActivityItem type="message" message="New message from James" time="5h ago" />
+          <ActivityItem type="event" message="Tomorrowland tickets are selling fast!" time="1d ago" />
         </div>
       </section>
     </div>
@@ -138,29 +155,32 @@ export default function HomePage() {
 }
 
 function EventCard({
+  slug,
   name,
   date,
   location,
-  image,
-  status,
-  matches,
+  imageUrl,
+  attendees,
 }: {
+  slug: string;
   name: string;
   date: string;
   location: string;
-  image: string;
-  status: 'looking' | 'found';
-  matches: number;
+  imageUrl: string | null;
+  attendees: number;
 }) {
   return (
     <Link
-      href="/events"
+      href={`/events/${slug}`}
       className="glass glass-hover flex gap-4 overflow-hidden rounded-2xl p-3"
     >
-      <img
-        src={image}
-        alt={name}
-        className="h-20 w-20 rounded-xl object-cover"
+      <div
+        className="h-20 w-20 flex-shrink-0 rounded-xl bg-cover bg-center"
+        style={{
+          backgroundImage: imageUrl
+            ? `url(${imageUrl})`
+            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        }}
       />
       <div className="flex flex-1 flex-col justify-between py-1">
         <div>
@@ -169,16 +189,9 @@ function EventCard({
           <p className="text-sm text-white/40">{location}</p>
         </div>
         <div className="flex items-center gap-2">
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-              status === 'looking'
-                ? 'bg-instagram-orange/20 text-instagram-orange'
-                : 'bg-green-500/20 text-green-400'
-            }`}
-          >
-            {status === 'looking' ? 'Looking' : 'Found'}
+          <span className="rounded-full bg-instagram-pink/20 px-2 py-0.5 text-xs font-medium text-instagram-pink">
+            {attendees} looking
           </span>
-          <span className="text-xs text-white/40">{matches} matches</span>
         </div>
       </div>
     </Link>
@@ -202,10 +215,9 @@ function MatchCard({
       className="glass glass-hover flex w-28 flex-shrink-0 flex-col items-center rounded-2xl p-4"
     >
       <div className="relative mb-3">
-        <img
-          src={image}
-          alt={name}
-          className="h-16 w-16 rounded-full"
+        <div
+          className="h-16 w-16 rounded-full bg-cover bg-center"
+          style={{ backgroundImage: `url(${image})` }}
         />
         <div className="absolute -bottom-1 -right-1 rounded-full bg-black px-1.5 py-0.5 text-xs font-bold text-instagram-pink">
           {compatibility}%

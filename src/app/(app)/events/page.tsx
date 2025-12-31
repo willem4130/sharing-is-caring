@@ -2,103 +2,67 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { api } from '@/trpc/react';
 
-const EVENTS = [
-  {
-    slug: 'tomorrowland-2025',
-    name: 'Tomorrowland',
-    date: 'Jul 18-27, 2025',
-    location: 'Boom, Belgium',
-    image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800',
-    type: 'Festival',
-    attendees: 127,
-    featured: true,
-  },
-  {
-    slug: 'glastonbury-2025',
-    name: 'Glastonbury',
-    date: 'Jun 25-29, 2025',
-    location: 'Pilton, UK',
-    image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800',
-    type: 'Festival',
-    attendees: 89,
-    featured: true,
-  },
-  {
-    slug: 'coachella-2025',
-    name: 'Coachella',
-    date: 'Apr 11-20, 2025',
-    location: 'Indio, USA',
-    image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800',
-    type: 'Festival',
-    attendees: 156,
-    featured: true,
-  },
-  {
-    slug: 'web-summit-2025',
-    name: 'Web Summit',
-    date: 'Nov 11-14, 2025',
-    location: 'Lisbon, Portugal',
-    image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800',
-    type: 'Conference',
-    attendees: 43,
-    featured: true,
-  },
-  {
-    slug: 'gamescom-2025',
-    name: 'Gamescom',
-    date: 'Aug 20-24, 2025',
-    location: 'Cologne, Germany',
-    image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800',
-    type: 'Convention',
-    attendees: 67,
-    featured: true,
-  },
-  {
-    slug: 'burning-man-2025',
-    name: 'Burning Man',
-    date: 'Aug 24 - Sep 1, 2025',
-    location: 'Black Rock Desert, USA',
-    image: 'https://images.unsplash.com/photo-1503095396549-807759245b35?w=800',
-    type: 'Cultural',
-    attendees: 34,
-    featured: false,
-  },
-  {
-    slug: 'f1-monaco-2025',
-    name: 'F1 Monaco GP',
-    date: 'May 23-25, 2025',
-    location: 'Monte Carlo, Monaco',
-    image: 'https://images.unsplash.com/photo-1504707748692-419802cf939d?w=800',
-    type: 'Sports',
-    attendees: 21,
-    featured: true,
-  },
-  {
-    slug: 'lowlands-2025',
-    name: 'Lowlands',
-    date: 'Aug 15-17, 2025',
-    location: 'Biddinghuizen, NL',
-    image: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800',
-    type: 'Festival',
-    attendees: 52,
-    featured: false,
-  },
+type EventType =
+  | 'MUSIC_FESTIVAL'
+  | 'CONFERENCE'
+  | 'CONCERT'
+  | 'SPORTS_EVENT'
+  | 'CONVENTION'
+  | 'TRADE_SHOW'
+  | 'CULTURAL_EVENT'
+  | 'OTHER';
+
+const FILTERS: { label: string; value: EventType | 'ALL' }[] = [
+  { label: 'All', value: 'ALL' },
+  { label: 'Festival', value: 'MUSIC_FESTIVAL' },
+  { label: 'Conference', value: 'CONFERENCE' },
+  { label: 'Convention', value: 'CONVENTION' },
+  { label: 'Sports', value: 'SPORTS_EVENT' },
+  { label: 'Cultural', value: 'CULTURAL_EVENT' },
 ];
 
-const FILTERS = ['All', 'Festival', 'Conference', 'Convention', 'Sports', 'Cultural'];
+const TYPE_LABELS: Record<EventType, string> = {
+  MUSIC_FESTIVAL: 'Festival',
+  CONFERENCE: 'Conference',
+  CONCERT: 'Concert',
+  SPORTS_EVENT: 'Sports',
+  CONVENTION: 'Convention',
+  TRADE_SHOW: 'Trade Show',
+  CULTURAL_EVENT: 'Cultural',
+  OTHER: 'Other',
+};
+
+function formatDateRange(startDate: Date, endDate: Date): string {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const startMonth = start.toLocaleDateString('en-US', { month: 'short' });
+  const endMonth = end.toLocaleDateString('en-US', { month: 'short' });
+  const startDay = start.getDate();
+  const endDay = end.getDate();
+  const year = end.getFullYear();
+
+  if (startMonth === endMonth) {
+    return `${startMonth} ${startDay}-${endDay}, ${year}`;
+  }
+  return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+}
 
 export default function EventsPage() {
-  const [activeFilter, setActiveFilter] = useState('All');
+  const [activeFilter, setActiveFilter] = useState<EventType | 'ALL'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredEvents = EVENTS.filter((event) => {
-    const matchesFilter = activeFilter === 'All' || event.type === activeFilter;
-    const matchesSearch =
-      event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.location.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesFilter && matchesSearch;
+  const { data, isLoading } = api.events.list.useQuery({
+    page: 1,
+    limit: 50,
+    upcoming: true,
+    eventType: activeFilter === 'ALL' ? undefined : activeFilter,
+    search: searchQuery || undefined,
   });
+
+  const events = data?.events ?? [];
+  const featuredEvents = events.filter((e) => e.isFeatured).slice(0, 3);
 
   return (
     <div className="px-4 py-6">
@@ -133,67 +97,97 @@ export default function EventsPage() {
       <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
         {FILTERS.map((filter) => (
           <button
-            key={filter}
-            onClick={() => setActiveFilter(filter)}
+            key={filter.value}
+            onClick={() => setActiveFilter(filter.value)}
             className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all ${
-              activeFilter === filter
+              activeFilter === filter.value
                 ? 'gradient-primary text-white'
                 : 'border border-white/10 bg-white/5 text-white/60 hover:text-white'
             }`}
           >
-            {filter}
+            {filter.label}
           </button>
         ))}
       </div>
 
-      {/* Featured Events */}
-      {activeFilter === 'All' && !searchQuery && (
-        <section className="mb-8">
-          <h2 className="mb-4 font-heading text-lg font-semibold text-white">Featured</h2>
-          <div className="flex gap-4 overflow-x-auto pb-2">
-            {EVENTS.filter((e) => e.featured)
-              .slice(0, 3)
-              .map((event) => (
-                <FeaturedEventCard key={event.slug} event={event} />
-              ))}
-          </div>
-        </section>
-      )}
-
-      {/* All Events */}
-      <section>
-        <h2 className="mb-4 font-heading text-lg font-semibold text-white">
-          {activeFilter === 'All' ? 'All Events' : activeFilter}
-        </h2>
-        <div className="space-y-3">
-          {filteredEvents.map((event) => (
-            <EventCard key={event.slug} event={event} />
-          ))}
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-instagram-pink" />
+          <p className="mt-4 text-white/50">Loading events...</p>
         </div>
-        {filteredEvents.length === 0 && (
-          <div className="py-12 text-center">
-            <p className="text-white/50">No events found</p>
-          </div>
-        )}
-      </section>
+      ) : (
+        <>
+          {/* Featured Events */}
+          {activeFilter === 'ALL' && !searchQuery && featuredEvents.length > 0 && (
+            <section className="mb-8">
+              <h2 className="mb-4 font-heading text-lg font-semibold text-white">Featured</h2>
+              <div className="flex gap-4 overflow-x-auto pb-2">
+                {featuredEvents.map((event) => (
+                  <FeaturedEventCard key={event.id} event={event} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* All Events */}
+          <section>
+            <h2 className="mb-4 font-heading text-lg font-semibold text-white">
+              {activeFilter === 'ALL'
+                ? 'All Events'
+                : FILTERS.find((f) => f.value === activeFilter)?.label ?? 'Events'}
+            </h2>
+            <div className="space-y-3">
+              {events.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+            {events.length === 0 && (
+              <div className="py-12 text-center">
+                <p className="text-white/50">No events found</p>
+              </div>
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 }
 
-function FeaturedEventCard({ event }: { event: (typeof EVENTS)[0] }) {
+type EventData = {
+  id: string;
+  slug: string;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+  city: string;
+  country: string;
+  imageUrl: string | null;
+  eventType: EventType;
+  isFeatured: boolean;
+  _count: { attendances: number };
+};
+
+function FeaturedEventCard({ event }: { event: EventData }) {
   return (
     <Link
       href={`/events/${event.slug}`}
       className="relative w-64 flex-shrink-0 overflow-hidden rounded-2xl"
     >
-      <img src={event.image} alt={event.name} className="h-40 w-full object-cover" />
+      <div
+        className="h-40 w-full bg-cover bg-center"
+        style={{
+          backgroundImage: event.imageUrl
+            ? `url(${event.imageUrl})`
+            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        }}
+      />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-4">
         <h3 className="font-semibold text-white">{event.name}</h3>
-        <p className="text-sm text-white/70">{event.date}</p>
+        <p className="text-sm text-white/70">{formatDateRange(event.startDate, event.endDate)}</p>
         <div className="mt-2 flex items-center gap-2">
           <span className="rounded-full bg-instagram-pink/20 px-2 py-0.5 text-xs font-medium text-instagram-pink">
-            {event.attendees} looking
+            {event._count.attendances} looking
           </span>
         </div>
       </div>
@@ -201,34 +195,40 @@ function FeaturedEventCard({ event }: { event: (typeof EVENTS)[0] }) {
   );
 }
 
-function EventCard({ event }: { event: (typeof EVENTS)[0] }) {
+function EventCard({ event }: { event: EventData }) {
   return (
     <Link
       href={`/events/${event.slug}`}
       className="glass glass-hover flex gap-4 overflow-hidden rounded-2xl p-3"
     >
-      <img src={event.image} alt={event.name} className="h-24 w-24 rounded-xl object-cover" />
+      <div
+        className="h-24 w-24 flex-shrink-0 rounded-xl bg-cover bg-center"
+        style={{
+          backgroundImage: event.imageUrl
+            ? `url(${event.imageUrl})`
+            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        }}
+      />
       <div className="flex flex-1 flex-col justify-between py-1">
         <div>
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-white">{event.name}</h3>
             <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/60">
-              {event.type}
+              {TYPE_LABELS[event.eventType]}
             </span>
           </div>
-          <p className="text-sm text-white/50">{event.date}</p>
-          <p className="text-sm text-white/40">{event.location}</p>
+          <p className="text-sm text-white/50">{formatDateRange(event.startDate, event.endDate)}</p>
+          <p className="text-sm text-white/40">
+            {event.city}, {event.country}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex -space-x-2">
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-6 w-6 rounded-full border-2 border-black bg-white/20"
-              />
+              <div key={i} className="h-6 w-6 rounded-full border-2 border-black bg-white/20" />
             ))}
           </div>
-          <span className="text-xs text-white/50">{event.attendees} people looking</span>
+          <span className="text-xs text-white/50">{event._count.attendances} people looking</span>
         </div>
       </div>
     </Link>

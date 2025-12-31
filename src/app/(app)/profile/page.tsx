@@ -2,48 +2,33 @@
 
 import { useUser } from '@/lib/mock/user-context';
 import Link from 'next/link';
+import { api } from '@/trpc/react';
 
-const PROFILE_DATA = {
-  'emma.wilson@test.com': {
-    displayName: 'Emma',
-    bio: 'Festival lover & photographer. Always looking for good vibes and new friends! 📸✨',
-    age: 28,
-    location: 'London, UK',
-    sleepSchedule: 'Night Owl',
-    cleanlinessLevel: 4,
-    socialLevel: 5,
-    smokingTolerance: 2,
-    drinkingTolerance: 4,
-    budgetRange: '€50-150/night',
-    interests: ['photography', 'electronic music', 'dancing', 'yoga'],
-    languages: ['English', 'Spanish'],
-    verificationLevel: 'Email Verified',
-    eventsAttending: 3,
-    reviewScore: 4.8,
-    reviewCount: 12,
-  },
-  default: {
-    displayName: 'User',
-    bio: 'Festival enthusiast looking for roommates',
-    age: 25,
-    location: 'Unknown',
-    sleepSchedule: 'Flexible',
-    cleanlinessLevel: 3,
-    socialLevel: 3,
-    smokingTolerance: 3,
-    drinkingTolerance: 3,
-    budgetRange: '€50-150/night',
-    interests: ['music', 'travel'],
-    languages: ['English'],
-    verificationLevel: 'None',
-    eventsAttending: 0,
-    reviewScore: 0,
-    reviewCount: 0,
-  },
-};
+const SLEEP_LABELS = {
+  EARLY_BIRD: 'Early Bird',
+  MODERATE: 'Moderate',
+  NIGHT_OWL: 'Night Owl',
+  FLEXIBLE: 'Flexible',
+} as const;
+
+const VERIFICATION_LABELS = {
+  NONE: 'Not Verified',
+  EMAIL: 'Email Verified',
+  PHONE: 'Phone Verified',
+  ID: 'ID Verified',
+  BACKGROUND: 'Background Checked',
+} as const;
 
 export default function ProfilePage() {
-  const { currentUser, isLoading } = useUser();
+  const { currentUser, isLoading: userLoading } = useUser();
+
+  // Fetch real user data from database
+  const { data: userData, isLoading: dataLoading } = api.users.getById.useQuery(
+    { id: currentUser?.id ?? '' },
+    { enabled: !!currentUser?.id }
+  );
+
+  const isLoading = userLoading || dataLoading;
 
   if (isLoading) {
     return (
@@ -53,31 +38,64 @@ export default function ProfilePage() {
     );
   }
 
-  const profile =
-    PROFILE_DATA[currentUser?.email as keyof typeof PROFILE_DATA] || PROFILE_DATA.default;
+  if (!currentUser) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center px-4">
+        <div className="text-5xl">👤</div>
+        <h2 className="mt-4 font-heading text-xl font-bold text-white">No User Selected</h2>
+        <p className="mt-2 text-center text-white/50">
+          Use the user switcher in the header to select a test user
+        </p>
+      </div>
+    );
+  }
+
+  const profile = userData?.profile;
+  const reviews = userData?.reviewsReceived ?? [];
+  const avgRating =
+    reviews.length > 0
+      ? (reviews.reduce((sum, r) => sum + r.overallRating, 0) / reviews.length).toFixed(1)
+      : null;
 
   return (
     <div className="px-4 py-6">
       {/* Profile Header */}
       <div className="mb-6 flex items-start gap-4">
-        <img
-          src={currentUser?.image || ''}
-          alt={currentUser?.name || ''}
-          className="h-20 w-20 rounded-full"
+        <div
+          className="h-20 w-20 rounded-full bg-cover bg-center"
+          style={{
+            backgroundImage: currentUser.image
+              ? `url(${currentUser.image})`
+              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          }}
         />
         <div className="flex-1">
-          <h1 className="font-heading text-xl font-bold text-white">{currentUser?.name}</h1>
-          <p className="text-sm text-white/50">{profile.location}</p>
+          <h1 className="font-heading text-xl font-bold text-white">
+            {profile?.displayName || currentUser.name}
+          </h1>
+          <p className="text-sm text-white/50">
+            {profile?.city && profile?.country
+              ? `${profile.city}, ${profile.country}`
+              : 'Location not set'}
+          </p>
           <div className="mt-2 flex items-center gap-3">
-            {profile.reviewCount > 0 && (
+            {avgRating && (
               <div className="flex items-center gap-1">
                 <span className="text-instagram-yellow">★</span>
-                <span className="text-sm text-white">{profile.reviewScore}</span>
-                <span className="text-sm text-white/40">({profile.reviewCount})</span>
+                <span className="text-sm text-white">{avgRating}</span>
+                <span className="text-sm text-white/40">({reviews.length})</span>
               </div>
             )}
-            <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-400">
-              {profile.verificationLevel}
+            <span
+              className={`rounded-full px-2 py-0.5 text-xs ${
+                profile?.verificationLevel && profile.verificationLevel !== 'NONE'
+                  ? 'bg-green-500/20 text-green-400'
+                  : 'bg-white/10 text-white/50'
+              }`}
+            >
+              {profile?.verificationLevel
+                ? VERIFICATION_LABELS[profile.verificationLevel]
+                : 'Not Verified'}
             </span>
           </div>
         </div>
@@ -98,83 +116,101 @@ export default function ProfilePage() {
 
       {/* Bio */}
       <div className="glass mb-6 rounded-xl p-4">
-        <p className="text-white/80">{profile.bio}</p>
+        <p className="text-white/80">{profile?.bio || 'No bio yet. Add one to help others know you better!'}</p>
       </div>
 
       {/* Stats */}
       <div className="mb-6 grid grid-cols-3 gap-3">
         <div className="glass rounded-xl p-4 text-center">
-          <p className="font-heading text-2xl font-bold text-white">{profile.eventsAttending}</p>
-          <p className="text-xs text-white/50">Events</p>
+          <p className="font-heading text-2xl font-bold text-white">{profile?.age || '-'}</p>
+          <p className="text-xs text-white/50">Age</p>
         </div>
         <div className="glass rounded-xl p-4 text-center">
-          <p className="font-heading text-2xl font-bold text-white">{profile.reviewCount}</p>
+          <p className="font-heading text-2xl font-bold text-white">{reviews.length}</p>
           <p className="text-xs text-white/50">Reviews</p>
         </div>
         <div className="glass rounded-xl p-4 text-center">
-          <p className="font-heading text-2xl font-bold gradient-text">{profile.reviewScore || '-'}</p>
+          <p className="font-heading text-2xl font-bold gradient-text">{avgRating || '-'}</p>
           <p className="text-xs text-white/50">Rating</p>
         </div>
       </div>
 
       {/* Preferences */}
-      <section className="mb-6">
-        <h2 className="mb-3 font-heading text-lg font-semibold text-white">Preferences</h2>
-        <div className="glass space-y-3 rounded-xl p-4">
-          <PreferenceRow label="Sleep Schedule" value={profile.sleepSchedule} icon="🌙" />
-          <PreferenceRow label="Budget" value={profile.budgetRange} icon="💰" />
-          <PreferenceRow
-            label="Cleanliness"
-            value={<LevelIndicator level={profile.cleanlinessLevel} />}
-            icon="✨"
-          />
-          <PreferenceRow
-            label="Social Level"
-            value={<LevelIndicator level={profile.socialLevel} />}
-            icon="🎉"
-          />
-          <PreferenceRow
-            label="Smoking"
-            value={<LevelIndicator level={profile.smokingTolerance} />}
-            icon="🚬"
-          />
-          <PreferenceRow
-            label="Drinking"
-            value={<LevelIndicator level={profile.drinkingTolerance} />}
-            icon="🍺"
-          />
-        </div>
-      </section>
+      {profile && (
+        <section className="mb-6">
+          <h2 className="mb-3 font-heading text-lg font-semibold text-white">Preferences</h2>
+          <div className="glass space-y-3 rounded-xl p-4">
+            <PreferenceRow
+              label="Sleep Schedule"
+              value={SLEEP_LABELS[profile.sleepSchedule]}
+              icon="🌙"
+            />
+            <PreferenceRow
+              label="Budget"
+              value={
+                profile.budgetMin && profile.budgetMax
+                  ? `€${Number(profile.budgetMin)}-${Number(profile.budgetMax)}/night`
+                  : 'Not set'
+              }
+              icon="💰"
+            />
+            <PreferenceRow
+              label="Cleanliness"
+              value={<LevelIndicator level={profile.cleanlinessLevel} />}
+              icon="✨"
+            />
+            <PreferenceRow
+              label="Social Level"
+              value={<LevelIndicator level={profile.socialLevel} />}
+              icon="🎉"
+            />
+            <PreferenceRow
+              label="Smoking"
+              value={<LevelIndicator level={profile.smokingTolerance} />}
+              icon="🚬"
+            />
+            <PreferenceRow
+              label="Drinking"
+              value={<LevelIndicator level={profile.drinkingTolerance} />}
+              icon="🍺"
+            />
+          </div>
+        </section>
+      )}
 
       {/* Interests */}
-      <section className="mb-6">
-        <h2 className="mb-3 font-heading text-lg font-semibold text-white">Interests</h2>
-        <div className="flex flex-wrap gap-2">
-          {profile.interests.map((interest) => (
-            <span
-              key={interest}
-              className="rounded-full bg-white/10 px-3 py-1.5 text-sm text-white/70"
-            >
-              {interest}
-            </span>
-          ))}
-        </div>
-      </section>
+      {profile?.interests && profile.interests.length > 0 && (
+        <section className="mb-6">
+          <h2 className="mb-3 font-heading text-lg font-semibold text-white">Interests</h2>
+          <div className="flex flex-wrap gap-2">
+            {profile.interests.map((interest) => (
+              <span
+                key={interest}
+                className="rounded-full bg-white/10 px-3 py-1.5 text-sm text-white/70"
+              >
+                {interest}
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Languages */}
-      <section className="mb-6">
-        <h2 className="mb-3 font-heading text-lg font-semibold text-white">Languages</h2>
-        <div className="flex flex-wrap gap-2">
-          {profile.languages.map((language) => (
-            <span
-              key={language}
-              className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white/70"
-            >
-              {language}
-            </span>
-          ))}
-        </div>
-      </section>
+      {profile?.languages && profile.languages.length > 0 && (
+        <section className="mb-6">
+          <h2 className="mb-3 font-heading text-lg font-semibold text-white">Languages</h2>
+          <div className="flex flex-wrap gap-2">
+            {profile.languages.map((language) => (
+              <span
+                key={language}
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white/70"
+              >
+                {language}
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Settings Link */}
       <Link
@@ -202,6 +238,13 @@ export default function ProfilePage() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </Link>
+
+      {/* Debug Info */}
+      <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4">
+        <p className="text-center text-xs text-white/40">
+          User: {currentUser.email}
+        </p>
+      </div>
     </div>
   );
 }
@@ -232,9 +275,7 @@ function LevelIndicator({ level }: { level: number }) {
       {[1, 2, 3, 4, 5].map((i) => (
         <div
           key={i}
-          className={`h-2 w-4 rounded-full ${
-            i <= level ? 'bg-instagram-pink' : 'bg-white/20'
-          }`}
+          className={`h-2 w-4 rounded-full ${i <= level ? 'bg-instagram-pink' : 'bg-white/20'}`}
         />
       ))}
     </div>
