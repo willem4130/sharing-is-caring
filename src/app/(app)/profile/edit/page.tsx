@@ -410,11 +410,11 @@ export default function EditProfilePage() {
       </div>
 
       {/* Fixed Save Button */}
-      <div className="fixed bottom-20 left-0 right-0 bg-gradient-to-t from-black to-transparent px-4 pb-4 pt-8">
+      <div className="fixed bottom-20 left-0 right-0 flex justify-center bg-gradient-to-t from-black to-transparent px-4 pb-4 pt-8">
         <button
           onClick={handleSave}
           disabled={updateMutation.isPending}
-          className="w-full rounded-xl bg-gradient-to-r from-instagram-purple to-instagram-pink py-4 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="w-full max-w-md rounded-xl bg-gradient-to-r from-instagram-purple to-instagram-pink py-3 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
         </button>
