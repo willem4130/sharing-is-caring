@@ -163,11 +163,11 @@ npm run db:seed      # Seed database
 |-------|------------|
 | Framework | Next.js 16 + App Router + Turbopack |
 | API | tRPC (type-safe) |
-| Database | PostgreSQL + Prisma |
-| Auth | NextAuth v5 (Google, Apple) |
+| Database | PostgreSQL (Neon) + Prisma |
+| Auth | Email magic links (planned) |
 | UI | shadcn/ui + Tailwind CSS |
-| Charts | Apache ECharts |
-| Animations | Framer Motion |
+| Theme | Dark Instagram-inspired (purple/pink/orange gradients) |
+| Fonts | Space Grotesk (headings) + Inter (body) |
 | Validation | Zod |
 | State | TanStack React Query |
 
@@ -201,21 +201,32 @@ npx vercel --prod
 
 ## Git Workflow
 
-**CRITICAL: This is a SEPARATE repository. NEVER commit to any nextjs-* or template repos!**
+**Repository:** `github.com/willem4130/sharing-is-caring`
 
-```bash
-# Initialize NEW repo (this project only)
-cd /Users/willemvandenberg/Dev/sharing-is-caring
-git init
-gh repo create sharing-is-caring --public --source=. --remote=origin
+Use `/commit` command for quality-checked commits with auto-push.
 
-# First commit
-git add .
-git commit -m "Initial commit: Sharing Is Caring platform"
-git push -u origin main
-```
+## Build Plan (Current Sprint)
 
-**WARNING:**
-- This repo: `github.com/willem4130/sharing-is-caring`
-- DO NOT push to any template, nextjs-fullstack-template, or other repos
-- Always verify you're in the correct directory before git operations
+### Phase 1: Database ⏳
+- [ ] Set up Neon PostgreSQL
+- [ ] Push schema & seed test data
+
+### Phase 2: App Shell ⏳
+- [ ] App layout with bottom nav
+- [ ] Mock user switcher for testing
+
+### Phase 3: Events ⏳
+- [ ] Events list & detail pages
+- [ ] Event cards, attend modal
+
+### Phase 4: Matching ⏳
+- [ ] Match discovery page
+- [ ] Match cards, profile preview
+- [ ] Request flow
+
+### Phase 5: Messaging ⏳
+- [ ] Inbox & chat threads
+
+### Phase 6: Profile ⏳
+- [ ] View/edit profile
+- [ ] Admin user management
