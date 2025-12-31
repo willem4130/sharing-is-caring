@@ -303,41 +303,43 @@ export default function EventDetailPage({
 
       {/* Fixed Bottom CTA */}
       <div className="fixed bottom-20 left-0 right-0 bg-gradient-to-t from-black via-black/90 to-transparent p-4 pt-8">
-        {isAttending ? (
-          <div className="flex gap-3">
-            <Link
-              href={`/matches?eventId=${event.id}`}
-              className="gradient-primary flex-1 rounded-full py-4 text-center font-semibold text-white"
-            >
-              Find Roommates
-            </Link>
+        <div className="mx-auto max-w-md">
+          {isAttending ? (
+            <div className="flex gap-3">
+              <Link
+                href={`/matches?eventId=${event.id}`}
+                className="gradient-primary flex-1 rounded-full py-4 text-center font-semibold text-white"
+              >
+                Find Roommates
+              </Link>
+              <button
+                onClick={handleUnattend}
+                disabled={unattendMutation.isPending}
+                className="rounded-full border border-white/20 bg-white/5 px-6 py-4 font-medium text-white/70 transition-colors hover:bg-white/10"
+              >
+                {unattendMutation.isPending ? '...' : 'Leave'}
+              </button>
+            </div>
+          ) : (
             <button
-              onClick={handleUnattend}
-              disabled={unattendMutation.isPending}
-              className="rounded-full border border-white/20 bg-white/5 px-6 py-4 font-medium text-white/70 transition-colors hover:bg-white/10"
+              onClick={() => setShowAttendModal(true)}
+              className="gradient-primary w-full rounded-full py-4 font-semibold text-white"
             >
-              {unattendMutation.isPending ? '...' : 'Leave'}
+              I&apos;m Going - Find Roommates
             </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setShowAttendModal(true)}
-            className="gradient-primary w-full rounded-full py-4 font-semibold text-white"
-          >
-            I&apos;m Going - Find Roommates
-          </button>
-        )}
-        {currentUser && (
-          <p className="mt-2 text-center text-xs text-white/40">
-            Signed in as {currentUser.name}
-          </p>
-        )}
+          )}
+          {currentUser && (
+            <p className="mt-2 text-center text-xs text-white/40">
+              Signed in as {currentUser.name}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Attend Modal */}
       {showAttendModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4">
-          <div className="glass w-full max-w-md rounded-t-3xl p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="glass w-full max-w-md rounded-3xl p-6">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-heading text-xl font-bold text-white">Join Event</h3>
               <button
