@@ -2,12 +2,15 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { api } from '@/trpc/react';
 
 type RequestTab = 'received' | 'sent';
 
 export default function MatchRequestsPage() {
   const [activeTab, setActiveTab] = useState<RequestTab>('received');
+  const [acceptedMatchId, setAcceptedMatchId] = useState<string | null>(null);
+  const router = useRouter();
 
   const { data: receivedRequests, isLoading: receivedLoading } =
     api.matches.getRequests.useQuery({ type: 'received' });
@@ -18,8 +21,14 @@ export default function MatchRequestsPage() {
   const utils = api.useUtils();
 
   const acceptMutation = api.matches.accept.useMutation({
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      setAcceptedMatchId(variables.matchId);
       utils.matches.getRequests.invalidate();
+      utils.messages.getConversations.invalidate();
+      // Redirect to messages after a short delay to show success
+      setTimeout(() => {
+        router.push('/messages');
+      }, 1500);
     },
   });
 
@@ -101,9 +110,10 @@ export default function MatchRequestsPage() {
             const avatarUrl =
               otherUser.image ||
               `https://api.dicebear.com/7.x/avataaars/svg?seed=${otherUser.id}`;
+            const isAccepted = acceptedMatchId === request.id;
 
             return (
-              <div key={request.id} className="glass rounded-2xl p-4">
+              <div key={request.id} className={`glass rounded-2xl p-4 transition-all ${isAccepted ? 'border border-green-500/50 bg-green-500/10' : ''}`}>
                 <div className="flex items-center gap-4">
                   <div
                     className="h-14 w-14 rounded-full bg-cover bg-center"
@@ -114,16 +124,22 @@ export default function MatchRequestsPage() {
                       {otherUser.name || 'Anonymous'}
                     </h3>
                     <p className="text-sm text-instagram-pink">{request.event.name}</p>
-                    <p className="mt-1 text-xs text-white/40">
-                      {Number(request.compatibilityScore)}% match
-                    </p>
+                    {isAccepted ? (
+                      <p className="mt-1 text-xs text-green-400">
+                        Matched! Opening messages...
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-xs text-white/40">
+                        {Number(request.compatibilityScore)}% match
+                      </p>
+                    )}
                   </div>
-                  {activeTab === 'received' && (
+                  {activeTab === 'received' && !isAccepted && (
                     <div className="flex gap-2">
                       <button
                         onClick={() => rejectMutation.mutate({ matchId: request.id })}
-                        disabled={rejectMutation.isPending}
-                        className="rounded-full border border-white/10 bg-white/5 p-2 text-white/60 transition-colors hover:bg-white/10"
+                        disabled={rejectMutation.isPending || acceptMutation.isPending}
+                        className="rounded-full border border-white/10 bg-white/5 p-2 text-white/60 transition-colors hover:bg-white/10 disabled:opacity-50"
                       >
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -131,13 +147,20 @@ export default function MatchRequestsPage() {
                       </button>
                       <button
                         onClick={() => acceptMutation.mutate({ matchId: request.id })}
-                        disabled={acceptMutation.isPending}
-                        className="gradient-primary rounded-full p-2 text-white"
+                        disabled={acceptMutation.isPending || rejectMutation.isPending}
+                        className="gradient-primary rounded-full p-2 text-white disabled:opacity-50"
                       >
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </button>
+                    </div>
+                  )}
+                  {activeTab === 'received' && isAccepted && (
+                    <div className="flex items-center gap-2 text-green-400">
+                      <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
                     </div>
                   )}
                   {activeTab === 'sent' && (

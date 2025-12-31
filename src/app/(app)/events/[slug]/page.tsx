@@ -211,7 +211,7 @@ export default function EventDetailPage({
           <div className="glass rounded-2xl p-4">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="font-semibold text-white">Who&apos;s Going</h3>
-              <Link href={`/events/${slug}/attendees`} className="text-sm text-instagram-pink">
+              <Link href={`/matches?eventId=${event.id}`} className="text-sm text-instagram-pink">
                 See all
               </Link>
             </div>
@@ -243,12 +243,9 @@ export default function EventDetailPage({
           <div className="glass rounded-2xl p-4">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="font-semibold text-white">Available Accommodations</h3>
-              <Link
-                href={`/events/${slug}/accommodations`}
-                className="text-sm text-instagram-pink"
-              >
-                See all
-              </Link>
+              <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/50">
+                Coming soon
+              </span>
             </div>
             <div className="space-y-3">
               {event.accommodations.slice(0, 2).map((accommodation) => (
