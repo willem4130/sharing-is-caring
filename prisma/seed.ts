@@ -13,12 +13,12 @@ async function main() {
   const events = [
     {
       name: 'Tomorrowland',
-      slug: 'tomorrowland-2025',
+      slug: 'tomorrowland-2026',
       description: "The world's largest electronic music festival",
       eventType: 'MUSIC_FESTIVAL' as const,
       tags: ['electronic', 'edm', 'camping'],
-      startDate: new Date('2025-07-18'),
-      endDate: new Date('2025-07-27'),
+      startDate: new Date('2026-07-17'),
+      endDate: new Date('2026-07-26'),
       venueName: 'De Schorre',
       city: 'Boom',
       country: 'Belgium',
@@ -28,12 +28,12 @@ async function main() {
     },
     {
       name: 'Glastonbury Festival',
-      slug: 'glastonbury-2025',
+      slug: 'glastonbury-2026',
       description: 'Legendary music and performing arts festival',
       eventType: 'MUSIC_FESTIVAL' as const,
       tags: ['rock', 'pop', 'indie', 'camping'],
-      startDate: new Date('2025-06-25'),
-      endDate: new Date('2025-06-29'),
+      startDate: new Date('2026-06-24'),
+      endDate: new Date('2026-06-28'),
       venueName: 'Worthy Farm',
       city: 'Pilton',
       country: 'United Kingdom',
@@ -43,12 +43,12 @@ async function main() {
     },
     {
       name: 'Coachella',
-      slug: 'coachella-2025',
+      slug: 'coachella-2026',
       description: 'Annual music and arts festival in California',
       eventType: 'MUSIC_FESTIVAL' as const,
       tags: ['pop', 'rock', 'hip-hop', 'electronic'],
-      startDate: new Date('2025-04-11'),
-      endDate: new Date('2025-04-20'),
+      startDate: new Date('2026-04-10'),
+      endDate: new Date('2026-04-19'),
       venueName: 'Empire Polo Club',
       city: 'Indio',
       country: 'United States',
@@ -58,12 +58,12 @@ async function main() {
     },
     {
       name: 'Lowlands',
-      slug: 'lowlands-2025',
+      slug: 'lowlands-2026',
       description: 'Dutch music festival with diverse lineup',
       eventType: 'MUSIC_FESTIVAL' as const,
       tags: ['rock', 'electronic', 'hip-hop', 'camping'],
-      startDate: new Date('2025-08-15'),
-      endDate: new Date('2025-08-17'),
+      startDate: new Date('2026-08-14'),
+      endDate: new Date('2026-08-16'),
       venueName: 'Evenemententerrein Walibi Holland',
       city: 'Biddinghuizen',
       country: 'Netherlands',
@@ -72,12 +72,12 @@ async function main() {
     },
     {
       name: 'Web Summit',
-      slug: 'web-summit-2025',
+      slug: 'web-summit-2026',
       description: "The world's largest tech conference",
       eventType: 'CONFERENCE' as const,
       tags: ['tech', 'startup', 'innovation'],
-      startDate: new Date('2025-11-11'),
-      endDate: new Date('2025-11-14'),
+      startDate: new Date('2026-11-10'),
+      endDate: new Date('2026-11-13'),
       venueName: 'Altice Arena',
       city: 'Lisbon',
       country: 'Portugal',
@@ -87,12 +87,12 @@ async function main() {
     },
     {
       name: 'Formula 1 Monaco Grand Prix',
-      slug: 'f1-monaco-2025',
+      slug: 'f1-monaco-2026',
       description: 'The most prestigious race on the F1 calendar',
       eventType: 'SPORTS_EVENT' as const,
       tags: ['f1', 'racing', 'motorsport'],
-      startDate: new Date('2025-05-23'),
-      endDate: new Date('2025-05-25'),
+      startDate: new Date('2026-05-22'),
+      endDate: new Date('2026-05-24'),
       city: 'Monte Carlo',
       country: 'Monaco',
       expectedAttendance: 100000,
@@ -101,12 +101,12 @@ async function main() {
     },
     {
       name: 'Gamescom',
-      slug: 'gamescom-2025',
+      slug: 'gamescom-2026',
       description: "Europe's largest gaming convention",
       eventType: 'CONVENTION' as const,
       tags: ['gaming', 'esports', 'tech'],
-      startDate: new Date('2025-08-20'),
-      endDate: new Date('2025-08-24'),
+      startDate: new Date('2026-08-19'),
+      endDate: new Date('2026-08-23'),
       venueName: 'Koelnmesse',
       city: 'Cologne',
       country: 'Germany',
@@ -116,12 +116,12 @@ async function main() {
     },
     {
       name: 'Burning Man',
-      slug: 'burning-man-2025',
+      slug: 'burning-man-2026',
       description: 'Annual gathering in the Black Rock Desert',
       eventType: 'CULTURAL_EVENT' as const,
       tags: ['art', 'community', 'camping', 'desert'],
-      startDate: new Date('2025-08-24'),
-      endDate: new Date('2025-09-01'),
+      startDate: new Date('2026-08-30'),
+      endDate: new Date('2026-09-07'),
       venueName: 'Black Rock City',
       city: 'Black Rock Desert',
       country: 'United States',
@@ -671,41 +671,41 @@ async function main() {
   // ============================================
   console.log('🎫 Creating event attendances...');
 
-  const tomorrowland = await prisma.event.findUnique({ where: { slug: 'tomorrowland-2025' } });
-  const glastonbury = await prisma.event.findUnique({ where: { slug: 'glastonbury-2025' } });
-  const gamescom = await prisma.event.findUnique({ where: { slug: 'gamescom-2025' } });
-  const webSummit = await prisma.event.findUnique({ where: { slug: 'web-summit-2025' } });
-  const coachella = await prisma.event.findUnique({ where: { slug: 'coachella-2025' } });
-  const burningMan = await prisma.event.findUnique({ where: { slug: 'burning-man-2025' } });
+  const tomorrowland = await prisma.event.findUnique({ where: { slug: 'tomorrowland-2026' } });
+  const glastonbury = await prisma.event.findUnique({ where: { slug: 'glastonbury-2026' } });
+  const gamescom = await prisma.event.findUnique({ where: { slug: 'gamescom-2026' } });
+  const webSummit = await prisma.event.findUnique({ where: { slug: 'web-summit-2026' } });
+  const coachella = await prisma.event.findUnique({ where: { slug: 'coachella-2026' } });
+  const burningMan = await prisma.event.findUnique({ where: { slug: 'burning-man-2026' } });
 
   // Map users to events they'd likely attend
   const attendances = [
     // Tomorrowland attendees
-    { email: 'emma.wilson@test.com', eventSlug: 'tomorrowland-2025', status: 'LOOKING' as const },
-    { email: 'nina.petrov@test.com', eventSlug: 'tomorrowland-2025', status: 'HAVE_ROOM' as const },
-    { email: 'james.chen@test.com', eventSlug: 'tomorrowland-2025', status: 'LOOKING' as const },
-    { email: 'tom.brown@test.com', eventSlug: 'tomorrowland-2025', status: 'LOOKING' as const },
-    { email: 'elena.popov@test.com', eventSlug: 'tomorrowland-2025', status: 'LOOKING' as const },
+    { email: 'emma.wilson@test.com', eventSlug: 'tomorrowland-2026', status: 'LOOKING' as const },
+    { email: 'nina.petrov@test.com', eventSlug: 'tomorrowland-2026', status: 'HAVE_ROOM' as const },
+    { email: 'james.chen@test.com', eventSlug: 'tomorrowland-2026', status: 'LOOKING' as const },
+    { email: 'tom.brown@test.com', eventSlug: 'tomorrowland-2026', status: 'LOOKING' as const },
+    { email: 'elena.popov@test.com', eventSlug: 'tomorrowland-2026', status: 'LOOKING' as const },
     // Glastonbury attendees
-    { email: 'tom.brown@test.com', eventSlug: 'glastonbury-2025', status: 'HAVE_ROOM' as const },
-    { email: 'emma.wilson@test.com', eventSlug: 'glastonbury-2025', status: 'LOOKING' as const },
-    { email: 'ryan.oconnor@test.com', eventSlug: 'glastonbury-2025', status: 'LOOKING' as const },
-    { email: 'hannah.schmidt@test.com', eventSlug: 'glastonbury-2025', status: 'LOOKING' as const },
+    { email: 'tom.brown@test.com', eventSlug: 'glastonbury-2026', status: 'HAVE_ROOM' as const },
+    { email: 'emma.wilson@test.com', eventSlug: 'glastonbury-2026', status: 'LOOKING' as const },
+    { email: 'ryan.oconnor@test.com', eventSlug: 'glastonbury-2026', status: 'LOOKING' as const },
+    { email: 'hannah.schmidt@test.com', eventSlug: 'glastonbury-2026', status: 'LOOKING' as const },
     // Gamescom attendees
-    { email: 'max.mueller@test.com', eventSlug: 'gamescom-2025', status: 'HAVE_ROOM' as const },
-    { email: 'yuki.tanaka@test.com', eventSlug: 'gamescom-2025', status: 'LOOKING' as const },
-    { email: 'david.kim@test.com', eventSlug: 'gamescom-2025', status: 'LOOKING' as const },
+    { email: 'max.mueller@test.com', eventSlug: 'gamescom-2026', status: 'HAVE_ROOM' as const },
+    { email: 'yuki.tanaka@test.com', eventSlug: 'gamescom-2026', status: 'LOOKING' as const },
+    { email: 'david.kim@test.com', eventSlug: 'gamescom-2026', status: 'LOOKING' as const },
     // Web Summit attendees
-    { email: 'alex.thompson@test.com', eventSlug: 'web-summit-2025', status: 'HAVE_ROOM' as const },
-    { email: 'james.chen@test.com', eventSlug: 'web-summit-2025', status: 'LOOKING' as const },
-    { email: 'sofia.martinez@test.com', eventSlug: 'web-summit-2025', status: 'LOOKING' as const },
+    { email: 'alex.thompson@test.com', eventSlug: 'web-summit-2026', status: 'HAVE_ROOM' as const },
+    { email: 'james.chen@test.com', eventSlug: 'web-summit-2026', status: 'LOOKING' as const },
+    { email: 'sofia.martinez@test.com', eventSlug: 'web-summit-2026', status: 'LOOKING' as const },
     // Coachella attendees
-    { email: 'david.kim@test.com', eventSlug: 'coachella-2025', status: 'LOOKING' as const },
-    { email: 'emma.wilson@test.com', eventSlug: 'coachella-2025', status: 'LOOKING' as const },
-    { email: 'mike.johnson@test.com', eventSlug: 'coachella-2025', status: 'HAVE_ROOM' as const },
+    { email: 'david.kim@test.com', eventSlug: 'coachella-2026', status: 'LOOKING' as const },
+    { email: 'emma.wilson@test.com', eventSlug: 'coachella-2026', status: 'LOOKING' as const },
+    { email: 'mike.johnson@test.com', eventSlug: 'coachella-2026', status: 'HAVE_ROOM' as const },
     // Burning Man attendees
-    { email: 'lucas.silva@test.com', eventSlug: 'burning-man-2025', status: 'HAVE_ROOM' as const },
-    { email: 'nina.petrov@test.com', eventSlug: 'burning-man-2025', status: 'LOOKING' as const },
+    { email: 'lucas.silva@test.com', eventSlug: 'burning-man-2026', status: 'HAVE_ROOM' as const },
+    { email: 'nina.petrov@test.com', eventSlug: 'burning-man-2026', status: 'LOOKING' as const },
   ];
 
   for (const att of attendances) {
