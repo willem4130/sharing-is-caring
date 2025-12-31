@@ -2,6 +2,7 @@ import type { UserProfile, VerificationLevel, SleepSchedule, Gender, GenderPrefe
 import { MATCHING_WEIGHTS } from './weights';
 
 export interface ScoreBreakdown {
+  [key: string]: number;
   sleepSchedule: number;
   cleanlinessLevel: number;
   smokingTolerance: number;
